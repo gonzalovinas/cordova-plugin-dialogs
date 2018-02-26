@@ -396,6 +396,10 @@ public class Notification extends CordovaPlugin {
             public void run() {
                 final EditText promptInput =  new EditText(cordova.getActivity());
 
+                InputFilter[] fa = new InputFilter[1];
+                fa[0] = new InputFilter.LengthFilter(6);
+                promptInput.setFilters(fa);
+
                 promptInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
 
                 /* CB-11677 - By default, prompt input text color is set according current theme.
