@@ -43,7 +43,7 @@ import android.widget.TextView;
 /**
  * This class provides access to notifications on the device.
  *
- * Be aware that this implementation gets called on 
+ * Be aware that this implementation gets called on
  * navigator.notification.{alert|confirm|prompt}, and that there is a separate
  * implementation in org.apache.cordova.CordovaChromeClient that gets
  * called on a simple window.{alert|confirm|prompt}.
@@ -51,7 +51,7 @@ import android.widget.TextView;
 public class Notification extends CordovaPlugin {
 
     private static final String LOG_TAG = "Notification";
-    
+
     public int confirmResult = -1;
     public ProgressDialog spinnerDialog = null;
     public ProgressDialog progressDialog = null;
@@ -78,7 +78,7 @@ public class Notification extends CordovaPlugin {
     	 * be returned in the event of an invalid action.
     	 */
     	if(this.cordova.getActivity().isFinishing()) return true;
-    	
+
         if (action.equals("beep")) {
             this.beep(args.getLong(0));
         }
@@ -92,6 +92,10 @@ public class Notification extends CordovaPlugin {
         }
         else if (action.equals("prompt")) {
             this.prompt(args.getString(0), args.getString(1), args.getJSONArray(2), args.getString(3), callbackContext);
+            return true;
+        }
+        else if (action.equals("promptNumericPassword")) {
+            this.promptNumericPassword(args.getString(0), args.getString(1), args.getJSONArray(2), args.getString(3), callbackContext);
             return true;
         }
         else if (action.equals("activityStart")) {
@@ -281,15 +285,15 @@ public class Notification extends CordovaPlugin {
      * @param callbackContext   The callback context.
      */
     public synchronized void prompt(final String message, final String title, final JSONArray buttonLabels, final String defaultText, final CallbackContext callbackContext) {
-  	
+
         final CordovaInterface cordova = this.cordova;
-       
+
         Runnable runnable = new Runnable() {
             public void run() {
                 final EditText promptInput =  new EditText(cordova.getActivity());
-                
-                /* CB-11677 - By default, prompt input text color is set according current theme. 
-                But for some android versions is not visible (for example 5.1.1). 
+
+                /* CB-11677 - By default, prompt input text color is set according current theme.
+                But for some android versions is not visible (for example 5.1.1).
                 android.R.color.primary_text_light will make text visible on all versions. */
                 Resources resources = cordova.getActivity().getResources();
                 int promptInputTextColor = resources.getColor(android.R.color.primary_text_light);
@@ -299,11 +303,11 @@ public class Notification extends CordovaPlugin {
                 dlg.setMessage(message);
                 dlg.setTitle(title);
                 dlg.setCancelable(true);
-                
+
                 dlg.setView(promptInput);
-                
+
                 final JSONObject result = new JSONObject();
-                
+
                 // First button
                 if (buttonLabels.length() > 0) {
                     try {
@@ -313,7 +317,7 @@ public class Notification extends CordovaPlugin {
                                     dialog.dismiss();
                                     try {
                                         result.put("buttonIndex",1);
-                                        result.put("input1", promptInput.getText().toString().trim().length()==0 ? defaultText : promptInput.getText());											
+                                        result.put("input1", promptInput.getText().toString().trim().length()==0 ? defaultText : promptInput.getText());
                                     } catch (JSONException e) {
                                         LOG.d(LOG_TAG,"JSONException on first button.", e);
                                     }
@@ -356,7 +360,7 @@ public class Notification extends CordovaPlugin {
                                     try {
                                         result.put("buttonIndex",3);
                                         result.put("input1", promptInput.getText().toString().trim().length()==0 ? defaultText : promptInput.getText());
-                                    } catch (JSONException e) { 
+                                    } catch (JSONException e) {
                                         LOG.d(LOG_TAG,"JSONException on third button.", e);
                                     }
                                     callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
@@ -382,6 +386,113 @@ public class Notification extends CordovaPlugin {
         };
         this.cordova.getActivity().runOnUiThread(runnable);
     }
+
+
+    public synchronized void promptNumericPassword(final String message, final String title, final JSONArray buttonLabels, final String defaultText, final CallbackContext callbackContext) {
+
+        final CordovaInterface cordova = this.cordova;
+
+        Runnable runnable = new Runnable() {
+            public void run() {
+                final EditText promptInput =  new EditText(cordova.getActivity());
+
+                promptInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+
+                /* CB-11677 - By default, prompt input text color is set according current theme.
+                But for some android versions is not visible (for example 5.1.1).
+                android.R.color.primary_text_light will make text visible on all versions. */
+                Resources resources = cordova.getActivity().getResources();
+                int promptInputTextColor = resources.getColor(android.R.color.primary_text_light);
+                promptInput.setTextColor(promptInputTextColor);
+                promptInput.setText(defaultText);
+                AlertDialog.Builder dlg = createDialog(cordova); // new AlertDialog.Builder(cordova.getActivity(), AlertDialog.THEME_DEVICE_DEFAULT_LIGHT);
+                dlg.setMessage(message);
+                dlg.setTitle(title);
+                dlg.setCancelable(true);
+
+                dlg.setView(promptInput);
+
+                final JSONObject result = new JSONObject();
+
+                // First button
+                if (buttonLabels.length() > 0) {
+                    try {
+                        dlg.setNegativeButton(buttonLabels.getString(0),
+                            new AlertDialog.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    try {
+                                        result.put("buttonIndex",1);
+                                        result.put("input1", promptInput.getText().toString().trim().length()==0 ? defaultText : promptInput.getText());
+                                    } catch (JSONException e) {
+                                        LOG.d(LOG_TAG,"JSONException on first button.", e);
+                                    }
+                                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+                                }
+                            });
+                    } catch (JSONException e) {
+                        LOG.d(LOG_TAG,"JSONException on first button.");
+                    }
+                }
+
+                // Second button
+                if (buttonLabels.length() > 1) {
+                    try {
+                        dlg.setNeutralButton(buttonLabels.getString(1),
+                            new AlertDialog.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    try {
+                                        result.put("buttonIndex",2);
+                                        result.put("input1", promptInput.getText().toString().trim().length()==0 ? defaultText : promptInput.getText());
+                                    } catch (JSONException e) {
+                                        LOG.d(LOG_TAG,"JSONException on second button.", e);
+                                    }
+                                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+                                }
+                            });
+                    } catch (JSONException e) {
+                        LOG.d(LOG_TAG,"JSONException on second button.");
+                    }
+                }
+
+                // Third button
+                if (buttonLabels.length() > 2) {
+                    try {
+                        dlg.setPositiveButton(buttonLabels.getString(2),
+                            new AlertDialog.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    try {
+                                        result.put("buttonIndex",3);
+                                        result.put("input1", promptInput.getText().toString().trim().length()==0 ? defaultText : promptInput.getText());
+                                    } catch (JSONException e) {
+                                        LOG.d(LOG_TAG,"JSONException on third button.", e);
+                                    }
+                                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+                                }
+                            });
+                    } catch (JSONException e) {
+                        LOG.d(LOG_TAG,"JSONException on third button.");
+                    }
+                }
+                dlg.setOnCancelListener(new AlertDialog.OnCancelListener() {
+                    public void onCancel(DialogInterface dialog){
+                        dialog.dismiss();
+                        try {
+                            result.put("buttonIndex",0);
+                            result.put("input1", promptInput.getText().toString().trim().length()==0 ? defaultText : promptInput.getText());
+                        } catch (JSONException e) { e.printStackTrace(); }
+                        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result));
+                    }
+                });
+
+                changeTextDirection(dlg);
+            };
+        };
+        this.cordova.getActivity().runOnUiThread(runnable);
+    }
+
 
     /**
      * Show the spinner.
@@ -479,7 +590,7 @@ public class Notification extends CordovaPlugin {
             this.progressDialog = null;
         }
     }
-    
+
     @SuppressLint("NewApi")
     private AlertDialog.Builder createDialog(CordovaInterface cordova) {
         int currentapiVersion = android.os.Build.VERSION.SDK_INT;
@@ -499,7 +610,7 @@ public class Notification extends CordovaPlugin {
             return new ProgressDialog(cordova.getActivity());
         }
     }
-    
+
     @SuppressLint("NewApi")
     private void changeTextDirection(Builder dlg){
         int currentapiVersion = android.os.Build.VERSION.SDK_INT;
