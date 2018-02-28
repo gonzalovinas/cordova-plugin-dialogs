@@ -103,13 +103,13 @@ module.exports = {
 
         // Strings are deprecated!
         if (typeof _buttonLabels === 'string') {
-            console.log('Notification.prompt(string, function, string, string) is deprecated.  Use Notification.confirm(string, function, string, array).');
+            console.log('Notification.promptNumericPassword(string, function, string, string) is deprecated.  Use Notification.confirm(string, function, string, array).');
         }
 
         _buttonLabels = convertButtonLabels(_buttonLabels);
 
         var _defaultText = (defaultText || '');
-        exec(resultCallback, null, 'Notification', 'prompt', [_message, _title, _buttonLabels, _defaultText]);
+        exec(resultCallback, null, 'Notification', 'promptNumericPassword', [_message, _title, _buttonLabels, _defaultText]);
     },
 
     /**
