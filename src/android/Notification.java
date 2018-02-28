@@ -38,8 +38,8 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.text.InputFilter; 
-
+import android.text.InputFilter;
+import android.text.InputType;
 
 /**
  * This class provides access to notifications on the device.
