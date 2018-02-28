@@ -95,6 +95,23 @@ module.exports = {
         exec(resultCallback, null, 'Notification', 'prompt', [_message, _title, _buttonLabels, _defaultText]);
     },
 
+
+    promptNumericPassword: function (message, resultCallback, title, buttonLabels, defaultText) {
+        var _message = (typeof message === 'string' ? message : JSON.stringify(message));
+        var _title = (typeof title === 'string' ? title : 'Prompt');
+        var _buttonLabels = (buttonLabels || ['OK', 'Cancel']);
+
+        // Strings are deprecated!
+        if (typeof _buttonLabels === 'string') {
+            console.log('Notification.prompt(string, function, string, string) is deprecated.  Use Notification.confirm(string, function, string, array).');
+        }
+
+        _buttonLabels = convertButtonLabels(_buttonLabels);
+
+        var _defaultText = (defaultText || '');
+        exec(resultCallback, null, 'Notification', 'prompt', [_message, _title, _buttonLabels, _defaultText]);
+    },
+
     /**
      * Causes the device to beep.
      * On Android, the default notification ringtone is played "count" times.
